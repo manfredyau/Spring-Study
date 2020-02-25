@@ -13,6 +13,15 @@ public class MyTest_08 {
 
     @Test
     public void test2() {
+        System.setProperty("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+        MyHandler myHandler = new MyHandler();
+        Landlord landlord = new Landlord();
+        Rent proxy = (Rent) myHandler.bind(landlord);
+        proxy.rent();
+    }
+
+    public static void main(String[] args) {
+        System.setProperty("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
         MyHandler myHandler = new MyHandler();
         Landlord landlord = new Landlord();
         Rent proxy = (Rent) myHandler.bind(landlord);

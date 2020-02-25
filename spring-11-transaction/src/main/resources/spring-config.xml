@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+         https://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/aop
+          https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!--開啟註解配置-->
+    <context:component-scan base-package="com.yau"/>
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="url" value="jdbc:postgresql://localhost:5432/mybatis"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value="FSqwk123"/>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="mybatis-config.xml"/>
+    </bean>
+
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <!--你可能會好奇為什麼 sqlSessionFactory 事實上是 SqlSessionFactoryBean 的實例而非 SqlSessionFactory，
+        為何可以放在此處？請參考：https://mybatis.org/spring/zh/factorybean.html -->
+        <constructor-arg ref="sqlSessionFactory"/>
+    </bean>
+
+    <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <property name="mapperInterface" value="com.yau.mapper.UserMapper"/>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="add*" />
+            <tx:method name="delete*" propagation="REQUIRES_NEW"/>
+            <tx:method name="update*"/>
+            <tx:method name="find*" read-only="false"/>  <!--意為不能對數據有增刪改的操作-->
+        </tx:attributes>
+    </tx:advice>
+
+    <!--使用 AOP 的方式來管理事務-->
+    <aop:config>
+        <aop:pointcut id="txPointCut"
+                      expression="execution(* com.yau.service.*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointCut"/>
+    </aop:config>
+    <!--    <tx:annotation-driven/>-->
+<!--    <aop:aspectj-autoproxy proxy-target-class="true"/>-->
+</beans>
